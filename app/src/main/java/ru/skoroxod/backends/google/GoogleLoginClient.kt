@@ -7,11 +7,14 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.SignInButton
 import com.google.android.gms.common.api.ApiException
+import com.google.android.gms.common.api.Status
 import ru.skoroxod.backends.BackendType
 import ru.skoroxod.backends.LoginClient
 
-class GoogleLoginClient(override val onComplete: (BackendType) -> Unit, override val onError: (Exception) -> Unit)
-    : LoginClient {
+class GoogleLoginClient(
+    override val onComplete: (BackendType, String) -> Unit,
+    override val onError: (Exception) -> Unit
+) : LoginClient {
 
     override fun initButton(button: View, activity: Activity) {
 
@@ -34,16 +37,20 @@ class GoogleLoginClient(override val onComplete: (BackendType) -> Unit, override
             val completedTask = GoogleSignIn.getSignedInAccountFromIntent(data)
             try {
                 val account = completedTask.getResult(ApiException::class.java)
-
-                onComplete?.invoke(BackendType.GOOGLE)
+                if (account != null) {
+                    onComplete.invoke(BackendType.GOOGLE, account.id ?: "null")
+                } else {
+                    onError.invoke(ApiException(Status(0, "account is null")))
+                }
             } catch (e: ApiException) {
-                onError?.invoke(e)
+                onError.invoke(e)
             }
             return true
         }
         return false
     }
-     companion object {
-         const val  REQUEST_CODE = 0x123
-     }
+
+    companion object {
+        const val REQUEST_CODE = 0x123
+    }
 }

@@ -8,6 +8,7 @@ import ru.skoroxod.backends.AuthChecker
 class FBAuthChecker : AuthChecker {
     override fun isLoggedIn(context: Context): Boolean {
         AccessToken.getCurrentAccessToken()?.userId
+
         return AccessToken.getCurrentAccessToken() != null
     }
 }

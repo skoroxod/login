@@ -6,7 +6,7 @@ import android.view.View
 
 interface LoginClient {
 
-    val onComplete: (BackendType) -> Unit
+    val onComplete: (BackendType, String) -> Unit
 
     val onError: (Exception) -> Unit
 

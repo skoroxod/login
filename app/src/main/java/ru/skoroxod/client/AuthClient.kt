@@ -12,7 +12,7 @@ import ru.skoroxod.backends.google.GoogleLoginClient
 import ru.skoroxod.backends.vk.VKLoginClient
 
 class AuthClient(
-                  val onSuccess: ((BackendType) -> Unit),
+                  val onSuccess: ((BackendType, String) -> Unit),
                   val onError: ((Exception) -> Unit)
 ) {
 

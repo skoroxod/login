@@ -3,13 +3,15 @@ package ru.skoroxod
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
-import com.vk.api.sdk.VK
-import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.rxkotlin.addTo
 import io.reactivex.schedulers.Schedulers
+import ru.skoroxod.backends.BackendFactory
 import ru.skoroxod.backends.BackendType
-import ru.skoroxod.backends.vk.VKUserRequest
+import ru.skoroxod.github.GithubUser
+import ru.skoroxod.repo.UserInfo
+import ru.skoroxod.repo.UserRepo
 import timber.log.Timber
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
@@ -29,29 +31,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
         if (loggedInBackendType != null) {
             Timber.tag("ViewModel").d("loggedin with : ${loggedInBackendType.name}")
-            userRepo.currentBackend = loggedInBackendType
-            viewState.postValue(ViewState.LoggedIn(loggedInBackendType.name))
+            loadUserInfo(loggedInBackendType)
+
         } else {
             Timber.tag("ViewModel").d("not logged in")
             viewState.postValue(ViewState.NotLoggedIn())
         }
     }
 
-    fun onLoginComplete(backendType: BackendType) {
+    fun onLoginComplete(backendType: BackendType, userId: String) {
         userRepo.currentBackend = backendType
-        viewState.postValue(ViewState.LoggedIn("loggedIn"))
 
-        val d = Observable.fromCallable {
-            VK.executeSync(VKUserRequest(183462871))
-        }
-            .subscribeOn(Schedulers.single())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe({
-                // response here
-            }, {
-                Timber.tag("ViewModel").d("error: $it")
-                // throwable here
-            })
+        Timber.tag("ViewModel.login").d("complete. $backendType, $userId")
+        loadUserInfo(backendType)
+
     }
 
     fun onLoginError(error: Exception) {
@@ -67,11 +60,52 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun getCurrentBackend(): BackendType? {
         return userRepo.currentBackend
     }
+
+    fun search(query: String) {
+        if (query.isNullOrEmpty()) {
+            Timber.tag("data").d(" empty query")
+            return
+        }
+        getApplication<GithubTestApp>().githubApi.searchUsers(query, 1, 10)
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribeOn(Schedulers.io())
+            .subscribe(
+                {
+                    Timber.tag("data").d("response ${it.items}")
+                    viewState.postValue(ViewState.LoggedIn(userRepo.userInfo!!, it.items))
+                },
+                {
+                    Timber.tag("data").e(it)
+                }
+            ).addTo(disposables)
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        disposables.clear()
+    }
+
+    private fun loadUserInfo(backendType: BackendType) {
+        BackendFactory().getUserInfoLoader(backendType, getApplication()).loadCurrentUserInfo()
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                {
+                    userRepo.login(backendType, it)
+                    viewState.postValue(ViewState.LoggedIn(it))
+                },
+                {
+                    Timber.tag("ViewModel.login").e("error in load user info. $it")
+                }
+            ).addTo(disposables)
+    }
+
+
 }
 
 sealed class ViewState {
     class NotLoggedIn : ViewState()
 
-    class LoggedIn(val user: String) : ViewState()
+    class LoggedIn(val userInfo: UserInfo, val users: List<GithubUser> = listOf()) : ViewState()
 
 }

@@ -10,18 +10,17 @@ import com.vk.api.sdk.auth.VKAuthCallback
 import com.vk.api.sdk.auth.VKScope
 import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
-import ru.skoroxod.UserInfo
+import ru.skoroxod.repo.UserInfo
 import ru.skoroxod.backends.BackendType
 import timber.log.Timber
 
-class VKLoginClient(override val onComplete: (BackendType) -> Unit, override val onError: (Exception) -> Unit) :
+class VKLoginClient(override val onComplete: (BackendType, String) -> Unit, override val onError: (Exception) -> Unit) :
     LoginClient {
 
     private val callback = object : VKAuthCallback {
         override fun onLogin(token: VKAccessToken) {
-            token.userId
             Timber.d("user id: ${token.userId}")
-            onComplete.invoke(BackendType.VK)
+            onComplete.invoke(BackendType.VK, token.userId?.toString()?: "null")
         }
 
         override fun onLoginFailed(errorCode: Int) {
@@ -37,12 +36,5 @@ class VKLoginClient(override val onComplete: (BackendType) -> Unit, override val
 
     override fun processLogin(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
         return !VK.onActivityResult(requestCode, resultCode, data, callback)
-    }
-
-    fun loadUserInfo(): Single<UserInfo> {
-        return Single.fromCallable {
-            VK.executeSync(VKProfileRequest())
-        }.map { VKUser.toUserInfo(it) }
-            .subscribeOn(Schedulers.single())
     }
 }

@@ -13,7 +13,7 @@ import ru.skoroxod.backends.LoginClient
 import java.util.*
 
 class FBLoginClient(
-    override val onComplete: (BackendType) -> Unit,
+    override val onComplete: (BackendType, String) -> Unit,
     override val onError: (Exception) -> Unit
 ) :
     LoginClient {
@@ -31,7 +31,8 @@ class FBLoginClient(
 
             registerCallback(callbackManager, object : FacebookCallback<LoginResult> {
                 override fun onSuccess(loginResult: LoginResult) {
-                    onComplete.invoke(BackendType.FACEBOOK)
+
+                    onComplete.invoke(BackendType.FACEBOOK, loginResult.accessToken.userId)
                 }
 
                 override fun onCancel() {
