@@ -30,12 +30,8 @@ import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
 
-    private var searchViewDisposable: Disposable? = null
     lateinit var authClient: AuthClient
     private val viewModel: MainViewModel by lazy { ViewModelProviders.of(this).get(MainViewModel::class.java) }
-
-
-    private var showMenu = false
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         Timber.tag("Activity").d("onActivityResult: $requestCode")
@@ -72,18 +68,15 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     private fun renderNotLoggedIn() {
-        showMenu = false
         drawer_layout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
 
         supportFragmentManager.beginTransaction().apply {
             replace(R.id.container, LoginFragment(), "login")
             commitAllowingStateLoss()
         }
-//        invalidateOptionsMenu()
     }
 
     private fun renderLoggedIn(viewState: ViewState.LoggedIn) {
-        showMenu = true
         drawer_layout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED)
 
         toolbar.navigationIcon?.setVisible(true, true)
@@ -96,7 +89,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         h.user_name.text = viewState.userInfo.displayName
         h.add_info.text = viewState.userInfo.userId
         showUserAvatar(viewState.userInfo.imageUrl)
-//        invalidateOptionsMenu()
         Toast.makeText(this, viewState.users.size.toString(), Toast.LENGTH_LONG).show()
     }
 
@@ -124,41 +116,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             super.onBackPressed()
         }
     }
-
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        Timber.d("onCreateOptionsMenu")
-        menuInflater.inflate(R.menu.main, menu)
-        initSearchView(menu, showMenu)
-
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.action_search -> true
-            else -> super.onOptionsItemSelected(item)
-        }
-    }
-
-    private fun initSearchView(menu: Menu, showMenu: Boolean) {
-        val searchMenuItem = menu.findItem(R.id.action_search)
-        searchMenuItem.isVisible = showMenu
-
-        val searchView = searchMenuItem?.actionView as SearchView
-
-        searchViewDisposable?.let { if(!it.isDisposed) it.dispose() }
-
-        searchViewDisposable = searchView.queryTextChangeEvents()
-            .debounce(300, TimeUnit.MILLISECONDS)
-            .doOnNext {
-                Timber.tag("query").d("query text: ${it.queryText}")
-            }
-            .subscribe {
-                viewModel.search(it.queryText.toString())
-            }
-    }
-
-
 
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {

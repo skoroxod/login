@@ -61,24 +61,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         return userRepo.currentBackend
     }
 
-    fun search(query: String) {
-        if (query.isNullOrEmpty()) {
-            Timber.tag("data").d(" empty query")
-            return
-        }
-        getApplication<GithubTestApp>().githubApi.searchUsers(query, 1, 10)
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribeOn(Schedulers.io())
-            .subscribe(
-                {
-                    Timber.tag("data").d("response ${it.items}")
-                    viewState.postValue(ViewState.LoggedIn(userRepo.userInfo!!, it.items))
-                },
-                {
-                    Timber.tag("data").e(it)
-                }
-            ).addTo(disposables)
-    }
 
     override fun onCleared() {
         super.onCleared()
