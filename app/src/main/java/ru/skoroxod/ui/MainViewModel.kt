@@ -1,4 +1,4 @@
-package ru.skoroxod
+package ru.skoroxod.ui
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
@@ -7,6 +7,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.schedulers.Schedulers
+import ru.skoroxod.client.LoginChecker
 import ru.skoroxod.backends.BackendFactory
 import ru.skoroxod.backends.BackendType
 import ru.skoroxod.github.GithubUser

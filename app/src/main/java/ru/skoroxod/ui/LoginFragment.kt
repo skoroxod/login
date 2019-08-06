@@ -1,4 +1,4 @@
-package ru.skoroxod
+package ru.skoroxod.ui
 
 import android.app.Activity
 import android.os.Bundle
@@ -6,12 +6,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import com.facebook.CallbackManager
-import com.facebook.FacebookCallback
-import com.facebook.FacebookException
-import com.facebook.login.LoginResult
 import kotlinx.android.synthetic.main.fragment_login.*
-import com.facebook.login.LoginManager
+import ru.skoroxod.R
 
 
 class LoginFragment : Fragment() {

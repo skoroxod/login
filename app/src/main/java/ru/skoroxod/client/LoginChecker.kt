@@ -1,4 +1,4 @@
-package ru.skoroxod
+package ru.skoroxod.client
 
 import android.content.Context
 import ru.skoroxod.backends.BackendFactory

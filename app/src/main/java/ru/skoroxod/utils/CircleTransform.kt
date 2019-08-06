@@ -1,4 +1,4 @@
-package ru.skoroxod
+package ru.skoroxod.utils
 
 
 import android.graphics.*

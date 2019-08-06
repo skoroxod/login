@@ -11,7 +11,7 @@ data class GithubResponse(
 data class GithubUser(
     val login: String,
     val id: Long,
-    val url: String,
+    val avatar_url: String,
     val html_url: String,
     val followers_url: String,
     val following_url: String,
