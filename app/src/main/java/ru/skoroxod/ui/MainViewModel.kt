@@ -7,19 +7,19 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.schedulers.Schedulers
-import ru.skoroxod.client.LoginChecker
-import ru.skoroxod.backends.BackendFactory
-import ru.skoroxod.backends.BackendType
-import ru.skoroxod.github.GithubUser
-import ru.skoroxod.repo.UserInfo
-import ru.skoroxod.repo.UserRepo
+import ru.skoroxod.domain.backends.LoginChecker
+import ru.skoroxod.domain.backends.BackendFactory
+import ru.skoroxod.domain.backends.BackendType
+import ru.skoroxod.domain.repo.UserRepo
 import timber.log.Timber
 
+
+/**
+ * ViewModel для MainActivity.
+ */
 class MainViewModel(application: Application) : AndroidViewModel(application) {
 
-    val viewState = MutableLiveData<ViewState>()
-
-    private val loginChecker = LoginChecker()
+    val viewState = MutableLiveData<MainActivtiyViewState>()
 
     val userRepo = UserRepo()
 
@@ -28,7 +28,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun isLoggedIn() {
         Timber.tag("ViewModel").d("is logged in")
 
-        val loggedInBackendType = loginChecker.isLoggedIn(this.getApplication())
+        val loggedInBackendType = LoginChecker().isLoggedIn(this.getApplication())
 
         if (loggedInBackendType != null) {
             Timber.tag("ViewModel").d("loggedin with : ${loggedInBackendType.name}")
@@ -36,7 +36,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
         } else {
             Timber.tag("ViewModel").d("not logged in")
-            viewState.postValue(ViewState.NotLoggedIn())
+            viewState.postValue(MainActivtiyViewState.NotLoggedIn())
         }
     }
 
@@ -45,17 +45,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
         Timber.tag("ViewModel.login").d("complete. $backendType, $userId")
         loadUserInfo(backendType)
-
     }
 
     fun onLoginError(error: Exception) {
+        Timber.tag("ViewModel.login").e("error: ${error.message}")
     }
 
     fun logout() {
         Timber.tag("ViewModel.logout").d("logout")
 
         userRepo.logout()
-        viewState.postValue(ViewState.NotLoggedIn())
+        viewState.postValue(MainActivtiyViewState.NotLoggedIn())
     }
 
     fun getCurrentBackend(): BackendType? {
@@ -75,20 +75,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             .subscribe(
                 {
                     userRepo.login(backendType, it)
-                    viewState.postValue(ViewState.LoggedIn(it))
+                    viewState.postValue(MainActivtiyViewState.LoggedIn(it))
                 },
                 {
                     Timber.tag("ViewModel.login").e("error in load user info. $it")
                 }
             ).addTo(disposables)
     }
-
-
 }
 
-sealed class ViewState {
-    class NotLoggedIn : ViewState()
-
-    class LoggedIn(val userInfo: UserInfo, val users: List<GithubUser> = listOf()) : ViewState()
-
-}
